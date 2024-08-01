@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>LinkedIn OAuth Example</title>
+</head>
+<body>
+  <h1>LinkedIn OAuth Example</h1>
+  
+  <!-- Display login button if not authenticated -->
+  <div id="loginSection">
+    <button onclick="authenticate()">Login with LinkedIn</button>
+  </div>
+
+  <div id="searchSection" style="display: none;">
+    <h2>Search LinkedIn Profiles</h2>
+    <form id="searchForm">
+      <input type="text" id="searchQuery" placeholder="Enter search term" required>
+      <button type="submit">Search</button>
+    </form>
+    <div id="results"></div>
+  </div>
+
+  <script>
+    function authenticate() {
+      window.location.href = 'http://localhost:3000/auth/linkedin';
+    }
+
+    async function checkAuthentication() {
+      const response = await fetch('/check-auth');
+      const isAuthenticated = await response.json();
+      if (isAuthenticated) {
+        document.getElementById('loginSection').style.display = 'none';
+        document.getElementById('searchSection').style.display = 'block';
+      }
+    }
+
+    document.getElementById('searchForm').addEventListener('submit', async function (event) {
+      event.preventDefault();
+      const query = document.getElementById('searchQuery').value;
+      const response = await fetch(`/search?query=${encodeURIComponent(query)}`);
+      const results = await response.json();
+
+      const resultsContainer = document.getElementById('results');
+      resultsContainer.innerHTML = '';
+
+      if (results.length === 0) {
+        resultsContainer.innerHTML = '<p>No results found.</p>';
+      } else {
+        results.forEach(result => {
+          const resultItem = document.createElement('div');
+          resultItem.classList.add('result-item');
+          resultItem.innerHTML = `<p>Name: ${result.firstName.localized.en_US} ${result.lastName.localized.en_US}</p>`;
+          resultsContainer.appendChild(resultItem);
+        });
+      }
+    });
+
+    // Check if the user is authenticated on page load
+    checkAuthentication();
+  </script>
+</body>
+</html>
